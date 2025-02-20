@@ -1,0 +1,56 @@
+/**
+ * style.css
+ * Archivo de estilos CSS globales para FindMyDoggy
+ * Aplica estilos comunes a todas las páginas.
+ */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa; /* Gris claro */
+  color: #333;
+}
+
+/* Estilos para la barra de navegación */
+.navbar {
+  margin-bottom: 1rem;
+}
+
+/* Clases para contenedores */
+.container-custom {
+  padding: 20px;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+/* Tarjetas o secciones */
+.card-custom {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 15px;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+
+/* Botones personalizados */
+.btn-primary-custom {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: #fff;
+}
+
+.btn-primary-custom:hover {
+  background-color: #0069d9;
+  border-color: #0062cc;
+}
+
+/* Clases de utilidad */
+.hidden {
+  display: none;
+}
