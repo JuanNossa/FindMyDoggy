@@ -71,6 +71,9 @@ Implementado en Node.js con TypeScript, utilizando MySQL (XAMPP/phpMyAdmin), JWT
     reward DECIMAL(10,2) DEFAULT 0.00,
     user_id INT NOT NULL,
     location_id INT,
+    image_path VARCHAR(255) NULL,
+    latitude DECIMAL(10,8) NULL,
+    longitude DECIMAL(11,8) NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
@@ -119,6 +122,7 @@ Implementado en Node.js con TypeScript, utilizando MySQL (XAMPP/phpMyAdmin), JWT
     message TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;
+
 
 6. **Compilar y arrancar el servidor**
     En la terminal, ejecuta:

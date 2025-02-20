@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('role', payload.role);
   
           // Redirigir según rol
-          if (payload.role === 'admin') {
+          if (payload.role === "admin") {
             window.location.href = 'admin-dashboard.html';
           } else {
             window.location.href = 'user-dashboard.html';

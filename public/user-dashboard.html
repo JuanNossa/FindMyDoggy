@@ -5,8 +5,7 @@
   <title>User Dashboard - FindMyDoggy</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Opcional: Iconos de Bootstrap -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <!-- Barra de navegación -->
@@ -17,38 +16,28 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarUser">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link active" href="#" id="nav-home">Inicio</a></li>
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link active" href="publications.html">Inicio</a></li>
           <li class="nav-item"><a class="nav-link" href="chat.html">Chats</a></li>
           <li class="nav-item"><a class="nav-link" href="user-profile.html">Mi Perfil</a></li>
           <li class="nav-item"><a class="nav-link" href="wallet.html">Wallet</a></li>
         </ul>
         <div class="d-flex">
-          <!-- Botón de notificaciones -->
           <button class="btn btn-warning me-2 position-relative" id="btnNotifications">
             <i class="bi bi-bell"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifCount">
-              0
-            </span>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifCount">0</span>
           </button>
-          <!-- Botón de logout -->
           <button class="btn btn-outline-light" id="btnLogout">Salir</button>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Contenido principal -->
-  <div class="container mt-4" id="contentArea">
-    <!-- Se cargarán dinámicamente las secciones (por ejemplo, publicaciones, etc.) -->
-    <h2>Bienvenido a FindMyDoggy</h2>
-    <p>En esta sección verás las publicaciones de mascotas, con opción de crear, editar o eliminar tus publicaciones.</p>
-    <!-- Botón para abrir modal de nueva publicación -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPublicationModal">Nueva Publicación</button>
-    <hr>
-    <div id="publicationsList">
-      <!-- Aquí se cargarán las publicaciones -->
-    </div>
+  <!-- Contenido principal: publicaciones -->
+  <div class="container mt-4">
+    <h2>Publicaciones</h2>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#newPublicationModal">Nueva Publicación</button>
+    <div id="publicationsList"></div>
   </div>
 
   <!-- Modal para Crear Publicación -->
@@ -60,7 +49,6 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
-          <!-- Formulario de publicación -->
           <form id="publicationForm">
             <div class="mb-3">
               <label for="pubTitle" class="form-label">Título</label>
@@ -79,8 +67,7 @@
               <input type="file" class="form-control" id="pubImage">
             </div>
             <div class="mb-3">
-              <label for="pubLocation" class="form-label">Ubicación (última vez vista)</label>
-              <!-- Aquí se integrará un mapa con Leaflet -->
+              <label for="pubLocation" class="form-label">Ubicación</label>
               <div id="map" style="height: 300px;"></div>
               <input type="hidden" id="pubLatitude">
               <input type="hidden" id="pubLongitude">
@@ -92,98 +79,15 @@
     </div>
   </div>
 
-  <!-- Bootstrap JS Bundle -->
+  <!-- Bootstrap JS Bundle y Leaflet JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Incluir Leaflet CSS y JS para el mapa -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Script para manejo del dashboard -->
-  <script>
-    // Al cargar la página, inicializa el mapa en el modal de publicación
-    let map, marker;
-    window.addEventListener('load', () => {
-      // Inicializar el mapa en el contenedor con id "map"
-      map = L.map('map').setView([4.6097102, -74.081749], 13); // Centro en Bogotá, por ejemplo
-
-      // Agregar capa base de OpenStreetMap
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
-
-      // Agregar evento para obtener la ubicación al hacer clic en el mapa
-      map.on('click', function(e) {
-        const { lat, lng } = e.latlng;
-        // Actualiza campos ocultos
-        document.getElementById('pubLatitude').value = lat;
-        document.getElementById('pubLongitude').value = lng;
-        // Colocar marcador (si existe, lo mueve)
-        if (marker) {
-          marker.setLatLng(e.latlng);
-        } else {
-          marker = L.marker(e.latlng).addTo(map);
-        }
-      });
-    });
-
-    // Manejo del formulario de publicación
-    document.getElementById('publicationForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      // Recopilar datos del formulario
-      const title = document.getElementById('pubTitle').value;
-      const description = document.getElementById('pubDescription').value;
-      const reward = document.getElementById('pubReward').value;
-      const latitude = document.getElementById('pubLatitude').value;
-      const longitude = document.getElementById('pubLongitude').value;
-      // Para subir imágenes, se utilizará FormData y se enviará a un endpoint de subida (configurado con Multer)
-      const imageInput = document.getElementById('pubImage');
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('reward', reward);
-      formData.append('latitude', latitude);
-      formData.append('longitude', longitude);
-      if (imageInput.files[0]) {
-        formData.append('image', imageInput.files[0]);
-      }
-      // Agregar user_id del usuario logueado (almacenado en localStorage)
-      formData.append('user_id', localStorage.getItem('userId'));
-
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/api/publications', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + token
-          },
-          body: formData
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          alert(data.message || 'Error al crear publicación');
-          return;
-        }
-        alert('Publicación creada exitosamente');
-        // Cierra el modal y actualiza la lista de publicaciones (función no implementada aquí)
-        // window.location.reload();
-      } catch (err) {
-        console.error('Error al crear publicación:', err);
-      }
-    });
-
-    // Manejo de logout
-    document.getElementById('btnLogout').addEventListener('click', () => {
-      localStorage.clear();
-      window.location.href = 'index.html';
-    });
-
-    // Función para cargar el conteo de notificaciones (simulado)
-    function loadNotifications() {
-      // Aquí se haría una petición GET a /api/notifications/{userId} y se actualizaría el badge
-      // Por simplicidad, se simula con 3 notificaciones
-      document.getElementById('notifCount').innerText = '3';
-    }
-
-    loadNotifications();
-  </script>
+  <!-- Scripts globales -->
+  <script src="assets/main.js"></script>
+  <!-- Script específico para publicaciones en el dashboard de usuario -->
+  <script src="assets/publications.js"></script>
+  <!-- Script para el dashboard de usuario -->
+  <script src="assets/userDashboard.js"></script>
 </body>
 </html>
