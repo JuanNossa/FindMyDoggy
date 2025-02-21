@@ -29,7 +29,8 @@ export class ChatMessage {
   static async create(chatMessage: ChatMessage): Promise<ChatMessage> {
     const pool = DBConfig.getPool();
     const [result] = await pool.query(
-      'INSERT INTO chat_messages (room, sender, message, created_at) VALUES (?, ?, ?, NOW())',
+      `INSERT INTO chat_messages (room, sender, message, created_at)
+       VALUES (?, ?, ?, NOW())`,
       [chatMessage.room, chatMessage.sender, chatMessage.message]
     );
     chatMessage.id = (result as any).insertId;
@@ -43,7 +44,23 @@ export class ChatMessage {
    */
   static async findByRoom(room: string): Promise<ChatMessage[]> {
     const pool = DBConfig.getPool();
-    const [rows] = await pool.query('SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC', [room]);
+    const [rows] = await pool.query(
+      `SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC`,
+      [room]
+    );
     return rows as ChatMessage[];
+  }
+   // Encuentra las rooms en las que participa un userId
+  // Este approach asume que "sender" es un userId en string.
+  static async findRoomsByUser(userId: number): Promise<{room: string}[]> {
+    const pool = DBConfig.getPool();
+    const [rows] = await pool.query(
+      `SELECT DISTINCT room 
+       FROM chat_messages 
+       WHERE sender = ?`,
+      [String(userId)]
+    );
+    // Retorna un array de { room: string }
+    return rows as { room: string }[];
   }
 }

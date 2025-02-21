@@ -29,6 +29,7 @@ import walletRoutes from './infrastructure/routes/WalletRoutes';
 import commentRoutes from './infrastructure/routes/CommentRoutes';
 import notificationRoutes from './infrastructure/routes/NotificationRoutes';
 import uploadRoutes from './infrastructure/routes/uploadRoutes';
+import chatRoutes from './infrastructure/routes/ChatRoutes';
 
 // Montar rutas
 app.use('/api/test', testRoutes);
@@ -38,6 +39,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/chats', chatRoutes);
 
 // Ruta raíz de prueba
 app.get('/', (req, res) => {

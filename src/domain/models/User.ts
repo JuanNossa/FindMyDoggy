@@ -72,4 +72,9 @@ export class User {
     }
     return null;
   }
+  static async findAll(): Promise<User[]> {
+    const pool = DBConfig.getPool();
+    const [rows] = await pool.query(`SELECT * FROM users`);
+    return rows as User[];
+  }
 }
