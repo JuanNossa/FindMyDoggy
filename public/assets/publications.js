@@ -4,7 +4,7 @@
  * - Listar publicaciones
  * - Crear nueva publicación (con imagen y ubicación)
  * - Editar / Eliminar (solo si es autor o admin)
- * - Comentar (ventana emergente)
+ * - Comentar (implementado)
  */
 
 let map, marker;
@@ -28,11 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPublications();
 });
 
-/**
- * Inicializa el mapa Leaflet para capturar ubicación.
- */
 function initMap() {
-  map = L.map('map').setView([4.60971, -74.08175], 13); // Ej: Bogotá
+  map = L.map('map').setView([4.60971, -74.08175], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
   map.on('click', function(e) {
@@ -47,15 +44,11 @@ function initMap() {
   });
 }
 
-/**
- * Carga las publicaciones desde el backend.
- */
 async function loadPublications() {
   const publicationsList = document.getElementById('publicationsList');
   if (!publicationsList) return;
-
+  const token = getToken();
   try {
-    const token = getToken();
     const response = await fetch('http://localhost:3000/api/publications', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
@@ -63,13 +56,21 @@ async function loadPublications() {
     publicationsList.innerHTML = '';
     if (data.publications) {
       data.publications.forEach(pub => {
-        const pubDiv = document.createElement('div');
-        pubDiv.classList.add('card', 'mb-3', 'p-3');
-
-        let pubContent = `<h5>${pub.title}</h5>
+        let pubContent = `<div class="card mb-3 p-3">
+          <h5>${pub.title}</h5>
           <p>${pub.description}</p>
           <p>Recompensa: $${pub.reward}</p>
           <p>Creada: ${pub.created_at}</p>`;
+        
+        // Mostrar imagen si existe
+        if (pub.image_path) {
+          pubContent += `<img src="../uploads/${pub.image_path}" alt="Imagen" width="150" class="mb-2 d-block">`;
+        }
+        
+        // Mostrar mapa si existen coordenadas
+        if (pub.latitude && pub.longitude) {
+          pubContent += `<div id="map-${pub.id}" style="height:200px;"></div>`;
+        }
         
         // Botones de editar/eliminar si es autor o admin
         const loggedUserId = getUserId();
@@ -78,12 +79,24 @@ async function loadPublications() {
           pubContent += `<button class="btn btn-sm btn-warning me-2" onclick="editPublication(${pub.id})">Editar</button>
                          <button class="btn btn-sm btn-danger" onclick="deletePublication(${pub.id})">Eliminar</button>`;
         }
-
+        
         // Botón para comentar
-        pubContent += `<button class="btn btn-sm btn-secondary ms-2" onclick="openComments(${pub.id})">Comentarios</button>`;
-
-        pubDiv.innerHTML = pubContent;
-        publicationsList.appendChild(pubDiv);
+        pubContent += `<button class="btn btn-sm btn-secondary ms-2" onclick="openCommentModal(${pub.id})">Comentar</button>`;
+        
+        pubContent += `</div>`;
+        publicationsList.innerHTML += pubContent;
+        
+        // Inicializar mapa para cada publicación con coordenadas
+        if (pub.latitude && pub.longitude) {
+          setTimeout(() => {
+            const mapDiv = document.getElementById(`map-${pub.id}`);
+            if (mapDiv) {
+              const pubMap = L.map(mapDiv).setView([pub.latitude, pub.longitude], 13);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(pubMap);
+              L.marker([pub.latitude, pub.longitude]).addTo(pubMap);
+            }
+          }, 100);
+        }
       });
     }
   } catch (err) {
@@ -91,21 +104,17 @@ async function loadPublications() {
   }
 }
 
-/**
- * Crea una nueva publicación usando FormData para enviar imagen.
- */
 async function createPublication(e) {
   e.preventDefault();
   const token = getToken();
   const user_id = getUserId();
-
   const title = document.getElementById('pubTitle').value;
   const description = document.getElementById('pubDescription').value;
   const reward = document.getElementById('pubReward').value;
   const latitude = document.getElementById('pubLatitude').value;
   const longitude = document.getElementById('pubLongitude').value;
   const imageInput = document.getElementById('pubImage');
-
+  
   const formData = new FormData();
   formData.append('title', title);
   formData.append('description', description);
@@ -116,7 +125,7 @@ async function createPublication(e) {
   if (imageInput.files[0]) {
     formData.append('image', imageInput.files[0]);
   }
-
+  
   try {
     const response = await fetch('http://localhost:3000/api/publications', {
       method: 'POST',
@@ -132,29 +141,71 @@ async function createPublication(e) {
     // Cerrar modal y recargar publicaciones
     const modalEl = document.getElementById('newPublicationModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
-    modal.hide();
+    if (modal) modal.hide();
     loadPublications();
   } catch (err) {
     console.error('Error al crear publicación:', err);
   }
 }
 
-/**
- * Edita una publicación (mostrar un modal con datos existentes, no implementado aquí).
- */
-function editPublication(pubId) {
-  alert(`Editar publicación ID: ${pubId} (Función no implementada)`);
+function openCommentModal(pubId) {
+  const content = prompt('Ingresa tu comentario:');
+  if (!content) return;
+  createComment(pubId, content);
 }
 
-/**
- * Elimina una publicación.
- */
+async function createComment(pubId, content) {
+  const token = getToken();
+  const userId = getUserId();
+  try {
+    const response = await fetch('http://localhost:3000/api/comments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ publication_id: pubId, user_id: userId, content })
+    });
+    const data = await response.json();
+    alert(data.message || 'Comentario creado');
+    // Podrías recargar la lista de comentarios si implementas un modal para ello
+  } catch (err) {
+    console.error('Error al crear comentario:', err);
+  }
+}
+
+function editPublication(pubId) {
+  const newTitle = prompt('Nuevo título:');
+  const newDesc = prompt('Nueva descripción:');
+  const newReward = prompt('Nueva recompensa (COP):');
+  if (!newTitle || !newDesc || !newReward) return;
+  updatePublication(pubId, newTitle, newDesc, Number(newReward));
+}
+
+async function updatePublication(pubId, title, description, reward) {
+  const token = getToken();
+  try {
+    const response = await fetch(`http://localhost:3000/api/publications/${pubId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ title, description, reward })
+    });
+    const data = await response.json();
+    alert(data.message || 'Publicación actualizada');
+    loadPublications();
+  } catch (err) {
+    console.error('Error al actualizar publicación:', err);
+  }
+}
+
 async function deletePublication(pubId) {
   const confirmDelete = confirm('¿Estás seguro de eliminar esta publicación?');
   if (!confirmDelete) return;
-
+  const token = getToken();
   try {
-    const token = getToken();
     const response = await fetch(`http://localhost:3000/api/publications/${pubId}`, {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer ' + token }
@@ -165,12 +216,4 @@ async function deletePublication(pubId) {
   } catch (err) {
     console.error('Error al eliminar publicación:', err);
   }
-}
-
-/**
- * Abre la ventana de comentarios para la publicación dada.
- */
-function openComments(pubId) {
-  alert(`Abrir comentarios para la publicación ID: ${pubId} (Función no implementada)`);
-  // Podrías crear un modal para listar y crear comentarios, similar al de publicación
 }

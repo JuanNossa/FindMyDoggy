@@ -1,11 +1,5 @@
 // src/domain/models/User.ts
 
-/**
- * Modelo para el usuario.
- * Representa la estructura de la tabla 'users' en la base de datos.
- * Incluye métodos estáticos para crear y buscar usuarios usando mysql2.
- */
-
 import DBConfig from '../../infrastructure/database/dbConfig';
 
 export class User {
@@ -22,11 +16,6 @@ export class User {
     this.role = role;
   }
 
-  /**
-   * Inserta un nuevo usuario en la base de datos.
-   * @param user Instancia de User a crear.
-   * @returns La instancia del usuario con su ID asignado.
-   */
   static async create(user: User): Promise<User> {
     const pool = DBConfig.getPool();
     const [result] = await pool.query(
@@ -37,29 +26,12 @@ export class User {
     return user;
   }
 
-  /**
-   * Busca un usuario por email.
-   * @param email Email del usuario a buscar.
-   * @returns Una instancia de User si se encuentra, o null en caso contrario.
-   */
-  static async findByEmail(email: string): Promise<User | null> {
+  static async findAll(): Promise<User[]> {
     const pool = DBConfig.getPool();
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    const results = rows as any[];
-    if (results.length > 0) {
-      const row = results[0];
-      const user = new User(row.name, row.email, row.password, row.role);
-      user.id = row.id;
-      return user;
-    }
-    return null;
+    const [rows] = await pool.query('SELECT * FROM users');
+    return rows as User[];
   }
 
-  /**
-   * Busca un usuario por su ID.
-   * @param id ID del usuario a buscar.
-   * @returns Una instancia de User si se encuentra, o null en caso contrario.
-   */
   static async findById(id: number): Promise<User | null> {
     const pool = DBConfig.getPool();
     const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
@@ -72,9 +44,58 @@ export class User {
     }
     return null;
   }
-  static async findAll(): Promise<User[]> {
+
+  static async update(id: number, data: Partial<User>): Promise<User | null> {
     const pool = DBConfig.getPool();
-    const [rows] = await pool.query(`SELECT * FROM users`);
-    return rows as User[];
+    let query = 'UPDATE users SET ';
+    const fields: string[] = [];
+    const values: any[] = [];
+    if (data.name) {
+      fields.push('name = ?');
+      values.push(data.name);
+    }
+    if (data.email) {
+      fields.push('email = ?');
+      values.push(data.email);
+    }
+    if (data.password) {
+      fields.push('password = ?');
+      values.push(data.password);
+    }
+    if (data.role) {
+      fields.push('role = ?');
+      values.push(data.role);
+    }
+    if (fields.length === 0) {
+      return User.findById(id);
+    }
+    query += fields.join(', ') + ' WHERE id = ?';
+    values.push(id);
+    await pool.query(query, values);
+    return User.findById(id);
   }
+
+  static async delete(id: number): Promise<boolean> {
+    const pool = DBConfig.getPool();
+    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    return (result as any).affectedRows > 0;
+  }
+
+    /**
+   * Busca un usuario por su correo electrónico.
+   * @param email Correo del usuario a buscar.
+   * @returns Una instancia de User si se encuentra, o null en caso contrario.
+   */
+    static async findByEmail(email: string): Promise<User | null> {
+      const pool = DBConfig.getPool();
+      const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      const results = rows as any[];
+      if (results.length > 0) {
+        const row = results[0];
+        const user = new User(row.name, row.email, row.password, row.role);
+        user.id = row.id;
+        return user;
+      }
+      return null;
+    }
 }

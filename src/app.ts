@@ -30,6 +30,7 @@ import commentRoutes from './infrastructure/routes/CommentRoutes';
 import notificationRoutes from './infrastructure/routes/NotificationRoutes';
 import uploadRoutes from './infrastructure/routes/uploadRoutes';
 import chatRoutes from './infrastructure/routes/ChatRoutes';
+import userRoutes from './infrastructure/routes/UserRoutes';
 
 // Montar rutas
 app.use('/api/test', testRoutes);
@@ -40,6 +41,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/users', userRoutes);
 
 // Ruta raíz de prueba
 app.get('/', (req, res) => {

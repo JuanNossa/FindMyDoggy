@@ -27,6 +27,8 @@ const WalletRoutes_1 = __importDefault(require("./infrastructure/routes/WalletRo
 const CommentRoutes_1 = __importDefault(require("./infrastructure/routes/CommentRoutes"));
 const NotificationRoutes_1 = __importDefault(require("./infrastructure/routes/NotificationRoutes"));
 const uploadRoutes_1 = __importDefault(require("./infrastructure/routes/uploadRoutes"));
+const ChatRoutes_1 = __importDefault(require("./infrastructure/routes/ChatRoutes"));
+const UserRoutes_1 = __importDefault(require("./infrastructure/routes/UserRoutes"));
 // Montar rutas
 app.use('/api/test', testRoutes_1.default);
 app.use('/api/auth', AuthRoutes_1.default);
@@ -35,6 +37,8 @@ app.use('/api/wallet', WalletRoutes_1.default);
 app.use('/api/comments', CommentRoutes_1.default);
 app.use('/api/notifications', NotificationRoutes_1.default);
 app.use('/api/uploads', uploadRoutes_1.default);
+app.use('/api/chats', ChatRoutes_1.default);
+app.use('/api/users', UserRoutes_1.default);
 // Ruta raíz de prueba
 app.get('/', (req, res) => {
     res.send('Bienvenido a FindMyDoggy API');
