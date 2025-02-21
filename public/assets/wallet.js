@@ -5,6 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   requireAuth();
+  
   const userIdSpan = document.getElementById('displayUserId');
   const balanceSpan = document.getElementById('displayBalance');
   const btnLogoutWallet = document.getElementById('btnLogoutWallet');
@@ -23,9 +24,27 @@ document.addEventListener('DOMContentLoaded', () => {
     buyCoinsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const token = getToken();
-      const user_id = getUserId();
-      const amountCOP = document.getElementById('amountCOP').value;
+      const user_id = Number(getUserId());
+      const amountCOP = Number(document.getElementById('amountCOP').value.trim());
+
+      console.log("Compra - user_id:", user_id, "amountCOP:", amountCOP);
+
+      // Validaciones para la compra
+      if (isNaN(user_id) || user_id <= 0) {
+        alert("Error: ID de usuario no válido.");
+        return;
+      }
+      if (isNaN(amountCOP) || amountCOP < 20000) {
+        alert("El monto mínimo de compra es $20.000 COP.");
+        return;
+      }
+      if (amountCOP > 500000) {
+        alert("El monto máximo de compra es $500.000 COP.");
+        return;
+      }
+      
       try {
+        console.log("Enviando =>", user_id, amountCOP);
         const response = await fetch('http://localhost:3000/api/wallet/buy', {
           method: 'POST',
           headers: {
@@ -55,9 +74,26 @@ document.addEventListener('DOMContentLoaded', () => {
     transferCoinsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const token = getToken();
-      const from_user_id = getUserId();
-      const to_user_id = document.getElementById('recipientId').value;
-      const amount = document.getElementById('transferAmount').value;
+      const from_user_id = Number(getUserId());
+      const to_user_id = Number(document.getElementById('recipientId').value.trim());
+      const amount = Number(document.getElementById('transferAmount').value.trim());
+
+      console.log("Transferencia - from_user_id:", from_user_id, "to_user_id:", to_user_id, "amount:", amount);
+
+      // Validaciones para la transferencia
+      if (isNaN(from_user_id) || from_user_id <= 0) {
+        alert("Error: ID de usuario origen no válido.");
+        return;
+      }
+      if (isNaN(to_user_id) || to_user_id <= 0) {
+        alert("Ingresa un ID de usuario receptor válido.");
+        return;
+      }
+      if (isNaN(amount) || amount < 1000) {
+        alert("El monto a transferir debe ser al menos 1000 coins.");
+        return;
+      }
+      
       try {
         const response = await fetch('http://localhost:3000/api/wallet/transfer', {
           method: 'POST',
@@ -67,8 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           body: JSON.stringify({ from_user_id, to_user_id, amount })
         });
-        const data = await response.json();
-        alert(data.message || 'Transferencia realizada');
+        await response.json();
+        alert("Transferencia Realizada");
         // Cerrar modal de transferencia
         const transferModalEl = document.getElementById('transferCoinsModal');
         const transferModal = bootstrap.Modal.getInstance(transferModalEl);
@@ -89,7 +125,7 @@ async function loadWallet() {
   const token = getToken();
   const userIdSpan = document.getElementById('displayUserId');
   const balanceSpan = document.getElementById('displayBalance');
-  if (userIdSpan) userIdSpan.innerText = userId || 'Desconocido';
+  userIdSpan.innerText = userId || 'Desconocido';
   try {
     const response = await fetch(`http://localhost:3000/api/wallet/${userId}`, {
       headers: { 'Authorization': 'Bearer ' + token }

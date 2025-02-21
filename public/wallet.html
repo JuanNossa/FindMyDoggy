@@ -47,7 +47,7 @@
         <div class="modal-body">
           <form id="buyCoinsForm">
             <div class="mb-3">
-              <label for="amountCOP" class="form-label">Monto en COP (máx. $500.000)</label>
+              <label for="amountCOP" class="form-label">Monto en COP (mínimo $20.000, máximo $500.000)</label>
               <input type="number" class="form-control" id="amountCOP" required>
             </div>
             <button type="submit" class="btn btn-primary">Comprar</button>
@@ -84,7 +84,9 @@
 
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/wallet.js"></script>
+  <!-- Main JS (funciones auxiliares: getToken, getUserId, logout, requireAuth, etc.) -->
   <script src="assets/main.js"></script>
+  <!-- Código específico para Wallet -->
+  <script src="assets/wallet.js"></script>
 </body>
 </html>

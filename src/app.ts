@@ -20,6 +20,9 @@ app.use(express.static('public'));
 // Configuración de middlewares
 app.use(cors());
 app.use(bodyParser.json());
+// IMPORTANTE: parsear JSON
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Importar rutas
 import testRoutes from './infrastructure/routes/testRoutes';

@@ -35,7 +35,6 @@ function getUserRole() {
 function getUserId() {
   return localStorage.getItem('userId');
 }
-
 /**
  * Redirige al login si no hay token JWT.
  */

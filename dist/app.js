@@ -19,6 +19,9 @@ app.use(express_1.default.static('public'));
 // Configuración de middlewares
 app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
+// IMPORTANTE: parsear JSON
+app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
 // Importar rutas
 const testRoutes_1 = __importDefault(require("./infrastructure/routes/testRoutes"));
 const AuthRoutes_1 = __importDefault(require("./infrastructure/routes/AuthRoutes"));
