@@ -16,7 +16,7 @@ router.post('/', asyncHandler(CommentController.create));
 
 // Endpoint para obtener todos los comentarios de una publicación
 // Se espera que la ruta sea: /api/comments/publication/:publication_id
-router.get('/publication/:publication_id', asyncHandler(CommentController.getByPublication));
+router.get('/publication/:pubId', asyncHandler(CommentController.getByPublication));
 
 // Endpoint para actualizar un comentario por su ID
 router.put('/:id', asyncHandler(CommentController.update));

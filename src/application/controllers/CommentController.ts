@@ -36,8 +36,8 @@ export class CommentController {
    */
   static async getByPublication(req: Request, res: Response): Promise<void> {
     try {
-      const { publication_id } = req.params;
-      const comments = await Comment.findByPublicationId(Number(publication_id));
+      const pubId = Number(req.params.pubId);
+      const comments = await Comment.findByPublicationId(pubId);
       res.json({ comments });
       return;
     } catch (error: any) {

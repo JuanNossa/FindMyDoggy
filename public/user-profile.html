@@ -1,35 +1,33 @@
+<!-- user-profile.html (Fragmento relevante) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Mi Perfil - FindMyDoggy</title>
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Estilos globales -->
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <!-- Barra de navegación -->
- <!-- Barra de navegación -->
- <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">FindMyDoggy</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUser">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarUser">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link active" href="publications.html">Inicio</a></li>
-        <li class="nav-item"><a class="nav-link" href="chat.html">Chats</a></li>
-        <li class="nav-item"><a class="nav-link" href="user-profile.html">Mi Perfil</a></li>
-        <li class="nav-item"><a class="nav-link" href="wallet.html">Wallet</a></li>
-      </ul>
-      <div class="d-flex">
-        <button class="btn btn-outline-light" id="btnLogout">Salir</button>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">FindMyDoggy</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUser">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarUser">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link active" href="publications.html">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="chat.html">Chats</a></li>
+          <li class="nav-item"><a class="nav-link" href="user-profile.html">Mi Perfil</a></li>
+          <li class="nav-item"><a class="nav-link" href="wallet.html">Wallet</a></li>
+        </ul>
+        <div class="d-flex">
+          <button class="btn btn-outline-light" id="btnLogout">Salir</button>
+        </div>
       </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
   <div class="container mt-4">
     <h2>Mi Perfil</h2>
@@ -40,11 +38,16 @@
       <p><strong>ID de Usuario:</strong> <span id="profileUserId"></span></p>
       <p><strong>Saldo Wallet:</strong> <span id="profileWalletBalance"></span> coins</p>
     </div>
-    <!-- Formulario para cambiar contraseña -->
-    <div class="card">
+
+    <!-- Formulario para cambiar contraseña (ejemplo) -->
+    <div class="card mb-3">
       <div class="card-header">Cambiar Contraseña</div>
       <div class="card-body">
         <form id="changePasswordForm">
+          <div class="mb-3">
+            <label for="oldPassword" class="form-label">Contraseña Actual</label>
+            <input type="password" id="oldPassword" class="form-control" required>
+          </div>
           <div class="mb-3">
             <label for="newPassword" class="form-label">Nueva Contraseña</label>
             <input type="password" id="newPassword" class="form-control" required>
@@ -53,70 +56,112 @@
         </form>
       </div>
     </div>
+
+    <!-- Botón para eliminar cuenta -->
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">Eliminar Cuenta</button>
   </div>
 
-  <!-- Bootstrap JS Bundle -->
+  <!-- Modal para eliminar cuenta -->
+  <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteAccountModalLabel">Eliminar Cuenta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p>Para eliminar tu cuenta, ingresa tu contraseña actual:</p>
+          <form id="deleteAccountForm">
+            <div class="mb-3">
+              <label for="deletePassword" class="form-label">Contraseña Actual</label>
+              <input type="password" class="form-control" id="deletePassword" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Confirmar Eliminación</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Script global -->
   <script src="assets/main.js"></script>
-  <!-- Lógica específica para el perfil -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      requireAuth();
-      // Simula la carga de datos del usuario. En una implementación real, harías un fetch a /api/users/:id
-      const profileName = document.getElementById('profileName');
-      const profileEmail = document.getElementById('profileEmail');
-      const profileUserId = document.getElementById('profileUserId');
-      const profileWalletBalance = document.getElementById('profileWalletBalance');
-
-      // Por ejemplo, cargar desde localStorage:
-      profileName.innerText = localStorage.getItem('userName') || 'No definido';
-      profileEmail.innerText = localStorage.getItem('userEmail') || 'No definido';
-      profileUserId.innerText = localStorage.getItem('userId') || 'No definido';
-
-      // Cargar el saldo desde el endpoint de wallet:
-      async function loadProfileWallet() {
-        const token = getToken();
-        const userId = localStorage.getItem('userId');
-        try {
-          const response = await fetch(`http://localhost:3000/api/wallet/${userId}`, {
-            headers: { 'Authorization': 'Bearer ' + token }
-          });
-          const data = await response.json();
-          if (data.wallet) {
-            profileWalletBalance.innerText = data.wallet.balance;
-          } else {
-            profileWalletBalance.innerText = '0';
+    <!-- Script para el dashboard de usuario -->
+    <script src="assets/userDashboard.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        requireAuth();
+        // Cargar datos del usuario (puedes guardar name y email en localStorage tras login)
+        document.getElementById('profileName').innerText = localStorage.getItem('userName') || 'No definido';
+        document.getElementById('profileEmail').innerText = localStorage.getItem('userEmail') || 'No definido';
+        document.getElementById('profileUserId').innerText = localStorage.getItem('userId') || 'No definido';
+  
+        // Cargar wallet (similar a user-profile)
+        async function loadProfileWallet() {
+          const token = getToken();
+          const userId = localStorage.getItem('userId');
+          try {
+            const response = await fetch(`http://localhost:3000/api/wallet/${userId}`, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await response.json();
+            document.getElementById('profileWalletBalance').innerText = data.wallet ? data.wallet.balance : '0';
+          } catch (err) {
+            console.error('Error al cargar wallet:', err);
           }
-        } catch (err) {
-          console.error('Error al cargar wallet:', err);
         }
-      }
-      loadProfileWallet();
-
-      // Manejo del formulario para cambiar contraseña:
-      const changePasswordForm = document.getElementById('changePasswordForm');
-      changePasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const newPassword = document.getElementById('newPassword').value;
-        const token = getToken();
-        const userId = localStorage.getItem('userId');
-        try {
-          const response = await fetch(`http://localhost:3000/api/users/${userId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ password: newPassword })
-          });
-          const data = await response.json();
-          alert(data.message || 'Contraseña actualizada');
-        } catch (err) {
-          console.error('Error al cambiar contraseña:', err);
-        }
+        loadProfileWallet();
+  
+        // Manejo del formulario para cambiar contraseña
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        changePasswordForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const oldPassword = document.getElementById('oldPassword').value;
+          const newPassword = document.getElementById('newPassword').value;
+          const userId = localStorage.getItem('userId');
+          const token = getToken();
+          try {
+            const response = await fetch('http://localhost:3000/api/users/changePassword', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({ userId, oldPassword, newPassword })
+            });
+            const data = await response.json();
+            alert(data.message || 'Contraseña actualizada');
+          } catch (err) {
+            console.error('Error al cambiar contraseña:', err);
+          }
+        });
+  
+        // Manejo del formulario para eliminar cuenta
+        const deleteAccountForm = document.getElementById('deleteAccountForm');
+        deleteAccountForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const password = document.getElementById('deletePassword').value;
+          const userId = localStorage.getItem('userId');
+          const token = getToken();
+          try {
+            const response = await fetch('http://localhost:3000/api/users/deleteAccount', {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({ userId, password })
+            });
+            const data = await response.json();
+            alert(data.message || 'Cuenta eliminada');
+            if (response.ok) {
+              localStorage.clear();
+              window.location.href = 'index.html';
+            }
+          } catch (err) {
+            console.error('Error al eliminar cuenta:', err);
+          }
+        });
       });
-    });
-  </script>
+    </script>
 </body>
 </html>

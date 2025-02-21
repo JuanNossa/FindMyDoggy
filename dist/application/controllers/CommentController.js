@@ -30,8 +30,8 @@ class CommentController {
      */
     static async getByPublication(req, res) {
         try {
-            const { publication_id } = req.params;
-            const comments = await Comment_1.Comment.findByPublicationId(Number(publication_id));
+            const pubId = Number(req.params.pubId);
+            const comments = await Comment_1.Comment.findByPublicationId(pubId);
             res.json({ comments });
             return;
         }

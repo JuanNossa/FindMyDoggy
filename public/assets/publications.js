@@ -174,6 +174,19 @@ async function createComment(pubId, content) {
   }
 }
 
+function openComments(pubId) {
+  // Llamar GET /api/comments/publication/pubId y mostrar en un modal o en un div
+  fetch(`http://localhost:3000/api/comments/publication/${pubId}`, {
+    headers: { 'Authorization': 'Bearer ' + getToken() }
+  })
+  .then(r => r.json())
+  .then(data => {
+    console.log(data.comments);
+    // Renderizar
+    alert('Comentarios:\n' + data.comments.map(c => c.content).join('\n'));
+  });
+}
+
 function editPublication(pubId) {
   const newTitle = prompt('Nuevo título:');
   const newDesc = prompt('Nueva descripción:');

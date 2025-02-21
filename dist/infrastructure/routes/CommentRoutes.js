@@ -13,7 +13,7 @@ const router = (0, express_1.Router)();
 router.post('/', (0, asyncHandler_1.asyncHandler)(CommentController_1.CommentController.create));
 // Endpoint para obtener todos los comentarios de una publicación
 // Se espera que la ruta sea: /api/comments/publication/:publication_id
-router.get('/publication/:publication_id', (0, asyncHandler_1.asyncHandler)(CommentController_1.CommentController.getByPublication));
+router.get('/publication/:pubId', (0, asyncHandler_1.asyncHandler)(CommentController_1.CommentController.getByPublication));
 // Endpoint para actualizar un comentario por su ID
 router.put('/:id', (0, asyncHandler_1.asyncHandler)(CommentController_1.CommentController.update));
 // Endpoint para eliminar un comentario por su ID

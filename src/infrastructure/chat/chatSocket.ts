@@ -32,36 +32,67 @@ export function socketAuthMiddleware(socket: Socket, next: (err?: Error) => void
 }
 
 /**
- * Inicializa el chat y maneja los eventos.
- * @param io Instancia del servidor Socket.IO.
+ * Inicializa la lógica de chat en tiempo real con Socket.IO.
+ * Se generan rooms con el formato minID_maxID, y se guardan los mensajes en la base de datos.
  */
 export function initChat(io: Server): void {
-  // Usar el middleware de autenticación para Socket.IO
-  io.use(socketAuthMiddleware);
-
   io.on('connection', (socket: Socket) => {
-    console.log(`Nuevo cliente conectado: ${socket.id}, usuario: ${JSON.stringify(socket.data.user)}`);
+    console.log(`Nuevo cliente conectado: ${socket.id}`);
 
-    // Evento para que un usuario se una a una sala
-    socket.on('joinRoom', async (room: string) => {
-      socket.join(room);
-      console.log(`Socket ${socket.id} se unió a la sala: ${room}`);
-      io.to(room).emit('chatMessage', { sender: 'Sistema', message: `El usuario ${socket.data.user.userId} se ha unido a la sala.` });
-      
-      // Opcional: enviar el historial de chat
-      const history = await ChatMessage.findByRoom(room);
-      socket.emit('chatHistory', history);
+    /**
+     * Manejo de "joinRoom":
+     * El front enviará un objeto { fromId, toId } y aquí calculamos la sala minID_maxID.
+     * Luego cargamos el historial y lo enviamos con "chatHistory".
+     */
+    socket.on('joinRoom', async (payload: { fromId: number, toId: number }) => {
+      try {
+        // Calcular room
+        const minId = Math.min(payload.fromId, payload.toId);
+        const maxId = Math.max(payload.fromId, payload.toId);
+        const room = `${minId}_${maxId}`;
+
+        socket.join(room);
+        console.log(`Socket ${socket.id} se unió a la sala: ${room}`);
+
+        // Cargar historial
+        const history = await ChatMessage.findByRoom(room);
+        socket.emit('chatHistory', history);
+      } catch (err) {
+        console.error('Error en joinRoom:', err);
+      }
     });
 
-    // Evento para recibir un mensaje de chat
-    socket.on('chatMessage', async (data: { room: string; sender: string; message: string }) => {
-      console.log(`Mensaje recibido de ${data.sender} en sala ${data.room}: ${data.message}`);
-      // Guardar el mensaje en la base de datos
-      await ChatMessage.create(new ChatMessage(data.room, data.sender, data.message));
-      // Emitir el mensaje a todos los clientes de la sala
-      io.to(data.room).emit('chatMessage', data);
+    /**
+     * Manejo de "chatMessage":
+     * El front enviará { fromId, toId, message }, y aquí calculamos la sala minID_maxID,
+     * guardamos el mensaje en la DB y lo emitimos a la sala.
+     */
+    socket.on('chatMessage', async (data: { fromId: number; toId: number; message: string }) => {
+      try {
+        const minId = Math.min(data.fromId, data.toId);
+        const maxId = Math.max(data.fromId, data.toId);
+        const room = `${minId}_${maxId}`;
+
+        console.log(`Mensaje recibido en sala ${room}: ${data.message}`);
+
+        // Guardar en la base de datos
+        await ChatMessage.create({
+          room,
+          sender: String(data.fromId),
+          message: data.message
+        });
+
+        // Emitir el mensaje a todos los clientes de la sala
+        io.to(room).emit('chatMessage', {
+          sender: data.fromId,
+          message: data.message
+        });
+      } catch (err) {
+        console.error('Error en chatMessage:', err);
+      }
     });
 
+    // Manejo de desconexión
     socket.on('disconnect', () => {
       console.log(`Cliente desconectado: ${socket.id}`);
     });

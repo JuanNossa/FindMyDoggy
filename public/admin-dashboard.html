@@ -28,13 +28,60 @@
   </nav>
 
   <div class="container mt-4">
-    <h2>Dashboard de Administrador</h2>
-    <p>Aquí puedes gestionar publicaciones, comentarios, usuarios y wallets.</p>
-    <!-- Se pueden incluir secciones para cada módulo -->
+    <h2>Publicaciones</h2>
+    <!-- Botón para nueva publicación -->
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#newPublicationModal">Nueva Publicación</button>
+
+    <!-- Lista de publicaciones -->
+    <div id="publicationsList"></div>
   </div>
 
+  <!-- Modal para crear publicación -->
+  <div class="modal fade" id="newPublicationModal" tabindex="-1" aria-labelledby="newPublicationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newPublicationModalLabel">Crear Publicación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="publicationForm">
+            <div class="mb-3">
+              <label for="pubTitle" class="form-label">Título</label>
+              <input type="text" class="form-control" id="pubTitle" required>
+            </div>
+            <div class="mb-3">
+              <label for="pubDescription" class="form-label">Descripción</label>
+              <textarea class="form-control" id="pubDescription" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="pubReward" class="form-label">Recompensa (COP)</label>
+              <input type="number" class="form-control" id="pubReward" required>
+            </div>
+            <div class="mb-3">
+              <label for="pubImage" class="form-label">Foto</label>
+              <input type="file" class="form-control" id="pubImage">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ubicación</label>
+              <div id="map" style="height: 300px;"></div>
+              <input type="hidden" id="pubLatitude">
+              <input type="hidden" id="pubLongitude">
+            </div>
+            <button type="submit" class="btn btn-primary">Publicar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/adminDashboard.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Scripts globales -->
   <script src="assets/main.js"></script>
+  <!-- Script específico de publications -->
+  <script src="assets/publications.js"></script>
 </body>
 </html>

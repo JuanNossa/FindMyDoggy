@@ -17,11 +17,7 @@ class ChatMessage {
         this.sender = sender;
         this.message = message;
     }
-    /**
-     * Inserta un mensaje de chat en la base de datos.
-     * @param chatMessage Instancia de ChatMessage a guardar.
-     * @returns La instancia con el ID asignado.
-     */
+    // Crea un mensaje en la DB
     static async create(chatMessage) {
         const pool = dbConfig_1.default.getPool();
         const [result] = await pool.query(`INSERT INTO chat_messages (room, sender, message, created_at)
@@ -29,24 +25,19 @@ class ChatMessage {
         chatMessage.id = result.insertId;
         return chatMessage;
     }
-    /**
-     * Retorna todos los mensajes de un chat (sala) específico.
-     * @param room Nombre de la sala.
-     * @returns Un array de ChatMessage.
-     */
+    // Retorna todos los mensajes de una sala
     static async findByRoom(room) {
         const pool = dbConfig_1.default.getPool();
         const [rows] = await pool.query(`SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC`, [room]);
         return rows;
     }
     // Encuentra las rooms en las que participa un userId
-    // Este approach asume que "sender" es un userId en string.
     static async findRoomsByUser(userId) {
         const pool = dbConfig_1.default.getPool();
-        const [rows] = await pool.query(`SELECT DISTINCT room 
-       FROM chat_messages 
+        // Aquí asumimos que "sender" es un string con el userId
+        const [rows] = await pool.query(`SELECT DISTINCT room
+       FROM chat_messages
        WHERE sender = ?`, [String(userId)]);
-        // Retorna un array de { room: string }
         return rows;
     }
 }

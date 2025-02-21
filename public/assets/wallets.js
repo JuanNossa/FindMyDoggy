@@ -29,11 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadWallets() {
     const token = getToken();
     try {
-      // Se asume que el endpoint de wallets para admin es: /api/wallets
       const response = await fetch('http://localhost:3000/api/wallets', {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
+        headers: { 'Authorization': 'Bearer ' + token }
       });
       const data = await response.json();
       if (data.wallets) {

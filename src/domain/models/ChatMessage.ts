@@ -11,7 +11,7 @@ import DBConfig from '../../infrastructure/database/dbConfig';
 export class ChatMessage {
   id?: number;
   room: string;
-  sender: string;
+  sender: string;  // ID del usuario emisor, en string
   message: string;
   created_at?: Date;
 
@@ -21,11 +21,7 @@ export class ChatMessage {
     this.message = message;
   }
 
-  /**
-   * Inserta un mensaje de chat en la base de datos.
-   * @param chatMessage Instancia de ChatMessage a guardar.
-   * @returns La instancia con el ID asignado.
-   */
+  // Crea un mensaje en la DB
   static async create(chatMessage: ChatMessage): Promise<ChatMessage> {
     const pool = DBConfig.getPool();
     const [result] = await pool.query(
@@ -37,11 +33,7 @@ export class ChatMessage {
     return chatMessage;
   }
 
-  /**
-   * Retorna todos los mensajes de un chat (sala) específico.
-   * @param room Nombre de la sala.
-   * @returns Un array de ChatMessage.
-   */
+  // Retorna todos los mensajes de una sala
   static async findByRoom(room: string): Promise<ChatMessage[]> {
     const pool = DBConfig.getPool();
     const [rows] = await pool.query(
@@ -50,17 +42,17 @@ export class ChatMessage {
     );
     return rows as ChatMessage[];
   }
-   // Encuentra las rooms en las que participa un userId
-  // Este approach asume que "sender" es un userId en string.
-  static async findRoomsByUser(userId: number): Promise<{room: string}[]> {
+
+  // Encuentra las rooms en las que participa un userId
+  static async findRoomsByUser(userId: number): Promise<{ room: string }[]> {
     const pool = DBConfig.getPool();
+    // Aquí asumimos que "sender" es un string con el userId
     const [rows] = await pool.query(
-      `SELECT DISTINCT room 
-       FROM chat_messages 
+      `SELECT DISTINCT room
+       FROM chat_messages
        WHERE sender = ?`,
       [String(userId)]
     );
-    // Retorna un array de { room: string }
     return rows as { room: string }[];
   }
 }
