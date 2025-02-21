@@ -1,10 +1,10 @@
 /**
  * publications.js
  * Maneja la lógica de la página de publicaciones:
- * - Listar publicaciones
+ * - Listar publicaciones (incluyendo comentarios)
  * - Crear nueva publicación (con imagen y ubicación)
- * - Editar / Eliminar (solo si es autor o admin)
- * - Comentar (implementado)
+ * - Editar / Eliminar publicación (solo si es autor o admin)
+ * - Comentar y eliminar comentarios (solo si es propietario de la publicación o admin)
  */
 
 let map, marker;
@@ -72,7 +72,7 @@ async function loadPublications() {
           pubContent += `<div id="map-${pub.id}" style="height:200px;"></div>`;
         }
         
-        // Botones de editar/eliminar si es autor o admin
+        // Botones de editar/eliminar publicación si es autor o admin
         const loggedUserId = getUserId();
         const role = getUserRole();
         if (role === 'admin' || pub.user_id == loggedUserId) {
@@ -82,6 +82,11 @@ async function loadPublications() {
         
         // Botón para comentar
         pubContent += `<button class="btn btn-sm btn-secondary ms-2" onclick="openCommentModal(${pub.id})">Comentar</button>`;
+        
+        // Botón para ver/ocultar comentarios y contenedor para comentarios.
+        // Se guarda el id del propietario de la publicación en data-owner.
+        pubContent += `<button class="btn btn-sm btn-info mt-2" onclick="toggleComments(${pub.id}, ${pub.user_id})">Ver comentarios</button>
+                       <div class="comments-section mt-2" id="comments-${pub.id}" data-owner="${pub.user_id}" style="display: none;"></div>`;
         
         pubContent += `</div>`;
         publicationsList.innerHTML += pubContent;
@@ -168,23 +173,74 @@ async function createComment(pubId, content) {
     });
     const data = await response.json();
     alert(data.message || 'Comentario creado');
-    // Podrías recargar la lista de comentarios si implementas un modal para ello
+    // Si los comentarios están visibles, se recargan.
+    const commentsContainer = document.getElementById(`comments-${pubId}`);
+    if (commentsContainer && commentsContainer.style.display !== 'none') {
+      const pubOwnerId = commentsContainer.dataset.owner;
+      loadComments(pubId, pubOwnerId);
+    }
   } catch (err) {
     console.error('Error al crear comentario:', err);
   }
 }
 
-function openComments(pubId) {
-  // Llamar GET /api/comments/publication/pubId y mostrar en un modal o en un div
-  fetch(`http://localhost:3000/api/comments/publication/${pubId}`, {
-    headers: { 'Authorization': 'Bearer ' + getToken() }
-  })
-  .then(r => r.json())
-  .then(data => {
-    console.log(data.comments);
-    // Renderizar
-    alert('Comentarios:\n' + data.comments.map(c => c.content).join('\n'));
-  });
+function toggleComments(pubId, pubOwnerId) {
+  const container = document.getElementById(`comments-${pubId}`);
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    loadComments(pubId, pubOwnerId);
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+async function loadComments(pubId, pubOwnerId) {
+  const token = getToken();
+  try {
+    const response = await fetch(`http://localhost:3000/api/comments/publication/${pubId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await response.json();
+    const container = document.getElementById(`comments-${pubId}`);
+    if (data.comments && container) {
+      let commentsHtml = '';
+      const role = getUserRole();
+      const loggedUserId = getUserId();
+      data.comments.forEach(comment => {
+         commentsHtml += `<div class="comment mb-2" id="comment-${comment.id}">
+           <p>${comment.content}</p>`;
+         // Sólo se muestra el botón de eliminar si el usuario logueado es admin o es el propietario de la publicación.
+         if (role === 'admin' || pubOwnerId == loggedUserId) {
+             commentsHtml += `<button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id}, ${pubId})">Eliminar comentario</button>`;
+         }
+         commentsHtml += `</div>`;
+      });
+      container.innerHTML = commentsHtml;
+    }
+  } catch (err) {
+    console.error('Error al cargar comentarios:', err);
+  }
+}
+
+async function deleteComment(commentId, pubId) {
+  if (!confirm('¿Estás seguro de eliminar este comentario?')) return;
+  const token = getToken();
+  try {
+    const response = await fetch(`http://localhost:3000/api/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await response.json();
+    alert(data.message || 'Comentario eliminado');
+    // Se recargan los comentarios de la publicación.
+    const container = document.getElementById(`comments-${pubId}`);
+    const pubOwnerId = container ? container.dataset.owner : null;
+    if (pubOwnerId) {
+      loadComments(pubId, pubOwnerId);
+    }
+  } catch (err) {
+    console.error('Error al eliminar comentario:', err);
+  }
 }
 
 function editPublication(pubId) {
