@@ -15,8 +15,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const WalletRoutes_1 = __importDefault(require("./infrastructure/routes/WalletRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-// Agregar middleware para servir archivos estáticos desde la carpeta 'public'
-app.use(express_1.default.static('public'));
 // Configuración de middlewares
 app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
@@ -26,6 +24,8 @@ app.use((req, res, next) => {
     console.log("REQUEST BODY:", req.body);
     next();
 });
+// Agregar middleware para servir archivos estáticos desde la carpeta 'public'
+app.use(express_1.default.static('public'));
 app.use(express_1.default.urlencoded({ extended: true }));
 // Importar rutas
 const testRoutes_1 = __importDefault(require("./infrastructure/routes/testRoutes"));

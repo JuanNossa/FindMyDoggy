@@ -14,10 +14,6 @@ import walletRoutes from './infrastructure/routes/WalletRoutes';
 dotenv.config();
 
 const app = express();
-
-// Agregar middleware para servir archivos estáticos desde la carpeta 'public'
-app.use(express.static('public'));
-
 // Configuración de middlewares
 app.use(cors());
 app.use(bodyParser.json());
@@ -28,13 +24,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Agregar middleware para servir archivos estáticos desde la carpeta 'public'
+app.use(express.static('public'));
+
 app.use(express.urlencoded({ extended: true }));
 
 // Importar rutas
 import testRoutes from './infrastructure/routes/testRoutes';
 import authRoutes from './infrastructure/routes/AuthRoutes';
 import publicationRoutes from './infrastructure/routes/PublicationRoutes';
-
 import commentRoutes from './infrastructure/routes/CommentRoutes';
 import notificationRoutes from './infrastructure/routes/NotificationRoutes';
 import uploadRoutes from './infrastructure/routes/uploadRoutes';
