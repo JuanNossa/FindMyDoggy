@@ -12,6 +12,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const WalletRoutes_1 = __importDefault(require("./infrastructure/routes/WalletRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // Agregar middleware para servir archivos estáticos desde la carpeta 'public'
@@ -21,12 +22,15 @@ app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
 // IMPORTANTE: parsear JSON
 app.use(express_1.default.json());
+app.use((req, res, next) => {
+    console.log("REQUEST BODY:", req.body);
+    next();
+});
 app.use(express_1.default.urlencoded({ extended: true }));
 // Importar rutas
 const testRoutes_1 = __importDefault(require("./infrastructure/routes/testRoutes"));
 const AuthRoutes_1 = __importDefault(require("./infrastructure/routes/AuthRoutes"));
 const PublicationRoutes_1 = __importDefault(require("./infrastructure/routes/PublicationRoutes"));
-const WalletRoutes_1 = __importDefault(require("./infrastructure/routes/WalletRoutes"));
 const CommentRoutes_1 = __importDefault(require("./infrastructure/routes/CommentRoutes"));
 const NotificationRoutes_1 = __importDefault(require("./infrastructure/routes/NotificationRoutes"));
 const uploadRoutes_1 = __importDefault(require("./infrastructure/routes/uploadRoutes"));
@@ -42,6 +46,9 @@ app.use('/api/notifications', NotificationRoutes_1.default);
 app.use('/api/uploads', uploadRoutes_1.default);
 app.use('/api/chats', ChatRoutes_1.default);
 app.use('/api/users', UserRoutes_1.default);
+//ruta para testear la base de datos
+const testConnectionRoutes_1 = __importDefault(require("./infrastructure/routes/testConnectionRoutes"));
+app.use('/api', testConnectionRoutes_1.default);
 // Ruta raíz de prueba
 app.get('/', (req, res) => {
     res.send('Bienvenido a FindMyDoggy API');

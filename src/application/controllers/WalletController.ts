@@ -32,12 +32,13 @@ export class WalletController {
     }
   }
 
-/**
+  /**
  * Simula la compra de coins.
  * Se espera en el body: user_id y amountCOP en COP.
  * La conversión es: $20.000 COP = 1.000 coins.
  * Se limita la compra máxima a $500.000 COP por transacción.
- */static async buyCoins(req: Request, res: Response): Promise<void> {
+ */
+static async buyCoins(req: Request, res: Response): Promise<void> {
   try {
     const { user_id, amountCOP } = req.body;
     if (!user_id || !amountCOP) {
@@ -82,96 +83,97 @@ export class WalletController {
     return;
   }
 }
-/**
+
+ /**
  * Transfiere coins de un usuario a otro.
  * Se espera en el body: from_user_id, to_user_id y amount (coins).
  * Se valida que el monto sea al menos 1,000 coins.
  */
 static async transferCoins(req: Request, res: Response): Promise<void> {
-    try {
-      const { from_user_id, to_user_id, amount } = req.body;
-      if (!from_user_id || !to_user_id || !amount) {
-        res.status(400).json({ message: 'Se requieren from_user_id, to_user_id y amount' });
-        return;
-      }
-      if (Number(amount) < 1000) {
-        res.status(400).json({ message: 'La transferencia mínima es de 1000 coins' });
-        return;
-      }
-  
-      // Obtener wallets de ambos usuarios
-      const fromWallet = await Wallet.findByUserId(Number(from_user_id));
-      const toWallet = await Wallet.findByUserId(Number(to_user_id));
-  
-      if (!fromWallet) {
-        res.status(404).json({ message: 'Wallet del usuario emisor no encontrada' });
-        return;
-      }
-      if (!toWallet) {
-        res.status(404).json({ message: 'Wallet del usuario receptor no encontrada' });
-        return;
-      }
-  
-      // Convertir saldos y monto a números
-      const fromBalance = parseFloat(fromWallet.balance.toString());
-      const toBalance = parseFloat(toWallet.balance.toString());
-      const transferAmount = Number(amount);
-  
-      // Verificar saldo suficiente
-      if (fromBalance < transferAmount) {
-        res.status(400).json({ message: 'Saldo insuficiente para la transferencia' });
-        return;
-      }
-  
-      // Calcular nuevos saldos
-      const newFromBalance = fromBalance - transferAmount;
-      const newToBalance = toBalance + transferAmount;
-  
-      const pool = DBConfig.getPool();
-      // Usar transacción para asegurar integridad
-      const connection = await pool.getConnection();
-      try {
-        await connection.beginTransaction();
-  
-        await connection.query('UPDATE wallets SET balance = ?, updated_at = NOW() WHERE user_id = ?', [
-          newFromBalance,
-          from_user_id,
-        ]);
-  
-        await connection.query('UPDATE wallets SET balance = ?, updated_at = NOW() WHERE user_id = ?', [
-          newToBalance,
-          to_user_id,
-        ]);
-  
-        // Registrar la transacción para el emisor
-        await connection.query(
-          'INSERT INTO transactions (wallet_id, type, amount, description, created_at) VALUES (?, ?, ?, ?, NOW())',
-          [fromWallet.id, 'debit', transferAmount, `Transferencia a usuario ${to_user_id}`]
-        );
-        // Registrar la transacción para el receptor
-        await connection.query(
-          'INSERT INTO transactions (wallet_id, type, amount, description, created_at) VALUES (?, ?, ?, ?, NOW())',
-          [toWallet.id, 'credit', transferAmount, `Transferencia desde usuario ${from_user_id}`]
-        );
-  
-        await connection.commit();
-      } catch (err) {
-        await connection.rollback();
-        throw err;
-      } finally {
-        connection.release();
-      }
-  
-      res.json({
-        message: 'Transferencia exitosa',
-        saldoEmisor: newFromBalance,
-        saldoReceptor: newToBalance,
-      });
-      return;
-    } catch (error: any) {
-      console.error('Error en WalletController.transferCoins:', error);
-      res.status(500).json({ error: error.message });
+  try {
+    const { from_user_id, to_user_id, amount } = req.body;
+    if (!from_user_id || !to_user_id || !amount) {
+      res.status(400).json({ message: 'Se requieren from_user_id, to_user_id y amount' });
       return;
     }
+    if (Number(amount) < 1000) {
+      res.status(400).json({ message: 'La transferencia mínima es de 1000 coins' });
+      return;
+    }
+
+    // Obtener wallets de ambos usuarios
+    const fromWallet = await Wallet.findByUserId(Number(from_user_id));
+    const toWallet = await Wallet.findByUserId(Number(to_user_id));
+
+    if (!fromWallet) {
+      res.status(404).json({ message: 'Wallet del usuario emisor no encontrada' });
+      return;
+    }
+    if (!toWallet) {
+      res.status(404).json({ message: 'Wallet del usuario receptor no encontrada' });
+      return;
+    }
+
+    // Convertir saldos y monto a números
+    const fromBalance = parseFloat(fromWallet.balance.toString());
+    const toBalance = parseFloat(toWallet.balance.toString());
+    const transferAmount = Number(amount);
+
+    // Verificar saldo suficiente
+    if (fromBalance < transferAmount) {
+      res.status(400).json({ message: 'Saldo insuficiente para la transferencia' });
+      return;
+    }
+
+    // Calcular nuevos saldos
+    const newFromBalance = fromBalance - transferAmount;
+    const newToBalance = toBalance + transferAmount;
+
+    const pool = DBConfig.getPool();
+    // Usar transacción para asegurar integridad
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      await connection.query('UPDATE wallets SET balance = ?, updated_at = NOW() WHERE user_id = ?', [
+        newFromBalance,
+        from_user_id,
+      ]);
+
+      await connection.query('UPDATE wallets SET balance = ?, updated_at = NOW() WHERE user_id = ?', [
+        newToBalance,
+        to_user_id,
+      ]);
+
+      // Registrar la transacción para el emisor
+      await connection.query(
+        'INSERT INTO transactions (wallet_id, type, amount, description, created_at) VALUES (?, ?, ?, ?, NOW())',
+        [fromWallet.id, 'debit', transferAmount, `Transferencia a usuario ${to_user_id}`]
+      );
+      // Registrar la transacción para el receptor
+      await connection.query(
+        'INSERT INTO transactions (wallet_id, type, amount, description, created_at) VALUES (?, ?, ?, ?, NOW())',
+        [toWallet.id, 'credit', transferAmount, `Transferencia desde usuario ${from_user_id}`]
+      );
+
+      await connection.commit();
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+
+    res.json({
+      message: 'Transferencia exitosa',
+      saldoEmisor: newFromBalance,
+      saldoReceptor: newToBalance,
+    });
+    return;
+  } catch (error: any) {
+    console.error('Error en WalletController.transferCoins:', error);
+    res.status(500).json({ error: error.message });
+    return;
   }
+}
 }

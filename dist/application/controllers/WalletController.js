@@ -31,11 +31,12 @@ class WalletController {
         }
     }
     /**
-     * Simula la compra de coins.
-     * Se espera en el body: user_id y amountCOP en COP.
-     * La conversión es: $20.000 COP = 1.000 coins.
-     * Se limita la compra máxima a $500.000 COP por transacción.
-     */ static async buyCoins(req, res) {
+   * Simula la compra de coins.
+   * Se espera en el body: user_id y amountCOP en COP.
+   * La conversión es: $20.000 COP = 1.000 coins.
+   * Se limita la compra máxima a $500.000 COP por transacción.
+   */
+    static async buyCoins(req, res) {
         try {
             const { user_id, amountCOP } = req.body;
             if (!user_id || !amountCOP) {
@@ -76,10 +77,10 @@ class WalletController {
         }
     }
     /**
-     * Transfiere coins de un usuario a otro.
-     * Se espera en el body: from_user_id, to_user_id y amount (coins).
-     * Se valida que el monto sea al menos 1,000 coins.
-     */
+    * Transfiere coins de un usuario a otro.
+    * Se espera en el body: from_user_id, to_user_id y amount (coins).
+    * Se valida que el monto sea al menos 1,000 coins.
+    */
     static async transferCoins(req, res) {
         try {
             const { from_user_id, to_user_id, amount } = req.body;

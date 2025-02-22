@@ -45,67 +45,56 @@ Implementado en Node.js con TypeScript, utilizando MySQL (XAMPP/phpMyAdmin), JWT
 5. **Crear la base de datos y tablas**
     Abre phpMyAdmin (generalmente en http://localhost/phpmyadmin) y ejecuta el siguiente script SQL:
     
-    CREATE DATABASE IF NOT EXISTS findmydoggy_db;
-    USE findmydoggy_db;
 
-    CREATE TABLE IF NOT EXISTS users (
+-- Crear la base de datos si no existe
+CREATE DATABASE IF NOT EXISTS findmydoggy_db;
+USE findmydoggy_db;
+
+-- Tabla de usuarios
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user'
-    ) ENGINE=InnoDB;
+) ENGINE=InnoDB;
 
-    CREATE TABLE IF NOT EXISTS locations (
+-- Tabla de ubicaciones
+CREATE TABLE IF NOT EXISTS locations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     latitude DECIMAL(10,8) NOT NULL,
     longitude DECIMAL(11,8) NOT NULL,
     description VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB;
+) ENGINE=InnoDB;
 
-    CREATE TABLE IF NOT EXISTS publications (
+-- Tabla de publicaciones
+CREATE TABLE IF NOT EXISTS publications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     reward DECIMAL(10,2) DEFAULT 0.00,
+    image_path VARCHAR(255),
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
     user_id INT NOT NULL,
     location_id INT,
-    image_path VARCHAR(255) NULL,
-    latitude DECIMAL(10,8) NULL,
-    longitude DECIMAL(11,8) NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
-    ) ENGINE=InnoDB;
+) ENGINE=InnoDB;
 
-    CREATE TABLE IF NOT EXISTS wallets (
+-- Tabla de billeteras
+CREATE TABLE IF NOT EXISTS wallets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     balance DECIMAL(10,2) DEFAULT 0.00,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+) ENGINE=InnoDB;
 
-    CREATE TABLE IF NOT EXISTS notifications (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    message TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
-
-    CREATE TABLE IF NOT EXISTS comments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    publication_id INT NOT NULL,
-    user_id INT NOT NULL,
-    content TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (publication_id) REFERENCES publications(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
-
-    CREATE TABLE IF NOT EXISTS transactions (
+-- Tabla de transacciones
+CREATE TABLE IF NOT EXISTS transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     wallet_id INT NOT NULL,
     type ENUM('credit', 'debit') NOT NULL,
@@ -113,15 +102,36 @@ Implementado en Node.js con TypeScript, utilizando MySQL (XAMPP/phpMyAdmin), JWT
     description VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (wallet_id) REFERENCES wallets(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB;
+) ENGINE=InnoDB;
 
-    CREATE TABLE IF NOT EXISTS chat_messages (
+-- Tabla de notificaciones
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Tabla de comentarios
+CREATE TABLE IF NOT EXISTS comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    publication_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (publication_id) REFERENCES publications(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Tabla de mensajes de chat
+CREATE TABLE IF NOT EXISTS chat_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room VARCHAR(100) NOT NULL,
     sender VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB;
+) ENGINE=InnoDB;
 
 
 6. **Compilar y arrancar el servidor**
