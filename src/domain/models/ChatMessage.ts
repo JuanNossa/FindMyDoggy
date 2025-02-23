@@ -6,7 +6,7 @@
  * Permite almacenar y consultar el historial de mensajes.
  */
 
-import DBConfig from '../../infrastructure/database/dbConfig';
+import dbConfig from '../../infrastructure/database/dbConfig';
 
 export class ChatMessage {
   id?: number;
@@ -21,9 +21,11 @@ export class ChatMessage {
     this.message = message;
   }
 
-  // Crea un mensaje en la DB
+  /**
+   * Crea un mensaje en la base de datos.
+   */
   static async create(chatMessage: ChatMessage): Promise<ChatMessage> {
-    const pool = DBConfig.getPool();
+    const pool = dbConfig.getPool();
     const [result] = await pool.query(
       `INSERT INTO chat_messages (room, sender, message, created_at)
        VALUES (?, ?, ?, NOW())`,
@@ -33,26 +35,28 @@ export class ChatMessage {
     return chatMessage;
   }
 
-  // Retorna todos los mensajes de una sala
-  static async findByRoom(room: string): Promise<ChatMessage[]> {
-    const pool = DBConfig.getPool();
-    const [rows] = await pool.query(
-      `SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC`,
+  /**
+   * Retorna todos los mensajes de una sala específica.
+   */
+  static async findByRoom(room: string): Promise<any[]> {
+    const pool = dbConfig.getPool();
+    const [rows] = await pool.query<any[]>(
+      'SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC',
       [room]
     );
-    return rows as ChatMessage[];
+    return rows; // ✅ Garantiza que rows se trate como un arreglo de resultados.
   }
 
-  // Encuentra las rooms en las que participa un userId
-  static async findRoomsByUser(userId: number): Promise<{ room: string }[]> {
-    const pool = DBConfig.getPool();
-    // Aquí asumimos que "sender" es un string con el userId
-    const [rows] = await pool.query(
-      `SELECT DISTINCT room
-       FROM chat_messages
-       WHERE sender = ?`,
-      [String(userId)]
+  /**
+   * Encuentra las salas (rooms) en las que participa un usuario.
+   */
+  static async findRoomsByUser(userId: number): Promise<any[]> {
+    const pool = dbConfig.getPool();
+    const userStr = String(userId);
+    const [rows] = await pool.query<any[]>(
+      `SELECT DISTINCT room FROM chat_messages WHERE room LIKE ? OR sender = ?`,
+      [`%${userStr}%`, userStr]
     );
-    return rows as { room: string }[];
+    return rows; // ✅ Se asegura de que se retorne un arreglo adecuado.
   }
 }

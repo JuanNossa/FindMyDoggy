@@ -17,7 +17,9 @@ class ChatMessage {
         this.sender = sender;
         this.message = message;
     }
-    // Crea un mensaje en la DB
+    /**
+     * Crea un mensaje en la base de datos.
+     */
     static async create(chatMessage) {
         const pool = dbConfig_1.default.getPool();
         const [result] = await pool.query(`INSERT INTO chat_messages (room, sender, message, created_at)
@@ -25,20 +27,22 @@ class ChatMessage {
         chatMessage.id = result.insertId;
         return chatMessage;
     }
-    // Retorna todos los mensajes de una sala
+    /**
+     * Retorna todos los mensajes de una sala específica.
+     */
     static async findByRoom(room) {
         const pool = dbConfig_1.default.getPool();
-        const [rows] = await pool.query(`SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC`, [room]);
-        return rows;
+        const [rows] = await pool.query('SELECT * FROM chat_messages WHERE room = ? ORDER BY created_at ASC', [room]);
+        return rows; // ✅ Garantiza que rows se trate como un arreglo de resultados.
     }
-    // Encuentra las rooms en las que participa un userId
+    /**
+     * Encuentra las salas (rooms) en las que participa un usuario.
+     */
     static async findRoomsByUser(userId) {
         const pool = dbConfig_1.default.getPool();
-        // Aquí asumimos que "sender" es un string con el userId
-        const [rows] = await pool.query(`SELECT DISTINCT room
-       FROM chat_messages
-       WHERE sender = ?`, [String(userId)]);
-        return rows;
+        const userStr = String(userId);
+        const [rows] = await pool.query(`SELECT DISTINCT room FROM chat_messages WHERE room LIKE ? OR sender = ?`, [`%${userStr}%`, userStr]);
+        return rows; // ✅ Se asegura de que se retorne un arreglo adecuado.
     }
 }
 exports.ChatMessage = ChatMessage;

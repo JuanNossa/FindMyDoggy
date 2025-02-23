@@ -16,8 +16,8 @@ router.get('/', (0, asyncHandler_1.asyncHandler)(async (_req, res) => {
     const pool = dbConfig_1.default.getPool();
     const [rows] = await pool.query(`
     SELECT w.id, w.user_id, u.name, u.email, CAST(w.balance AS DECIMAL(10,2)) AS balance
-FROM wallets w
-JOIN users u ON w.user_id = u.id;
+    FROM wallets w
+    JOIN users u ON w.user_id = u.id
   `);
     res.json({ wallets: rows });
 }));
@@ -103,24 +103,29 @@ router.post('/transfer', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
 /**
  * ✅ PUT /api/wallets/:id - Permite al administrador actualizar el saldo de una wallet.
  */
+/**
+ * ✅ PUT /api/wallets/:user_id - Permite al administrador actualizar el saldo de una wallet.
+ */
 router.put('/:user_id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const user_id = Number(req.params.user_id);
     const { balance } = req.body;
     if (!user_id || isNaN(user_id)) {
         res.status(400).json({ message: 'ID de usuario inválido.' });
-        return; // ✅ Detiene la ejecución después de enviar la respuesta
+        return;
+    }
+    if (balance === undefined || isNaN(Number(balance)) || Number(balance) < 0) {
+        res.status(400).json({ message: 'Saldo inválido. Debe ser un número positivo.' });
+        return;
     }
     const wallet = await Wallet_1.Wallet.findByUserId(user_id);
     if (!wallet) {
-        console.warn(`No se encontró wallet para user_id: ${user_id}`);
         res.status(404).json({ message: 'Wallet no encontrada.' });
-        return; // ✅ Retorno agregado para evitar devolver Response en Promise<void>
+        return;
     }
-    const updated = await Wallet_1.Wallet.updateBalance(user_id, balance);
+    const updated = await Wallet_1.Wallet.updateBalance(user_id, Number(balance));
     if (!updated) {
-        console.error(`Fallo al actualizar el balance para user_id: ${user_id}`);
         res.status(500).json({ message: 'Error al actualizar el saldo.' });
-        return; // ✅ Asegura que la función finalice aquí
+        return;
     }
     res.status(200).json({ message: 'Saldo actualizado correctamente.', nuevoSaldo: balance });
 }));

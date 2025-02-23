@@ -1,12 +1,20 @@
-// src/application/controllers/ChatController.ts
-
+// 📂 src/application/controllers/ChatController.ts
 import { Request, Response } from 'express';
 import { ChatMessage } from '../../domain/models/ChatMessage';
 
 export class ChatController {
   /**
-   * Retorna las salas (rooms) en las que participa un usuario,
-   * basándonos en los mensajes que ha enviado o recibido.
+   * Crea o reutiliza una sala entre dos usuarios.
+   */
+  static async createRoom(fromId: number, toId: number): Promise<string> {
+    const minId = Math.min(fromId, toId);
+    const maxId = Math.max(fromId, toId);
+    const room = `${minId}_${maxId}`;
+    return room;
+  }
+
+  /**
+   * Obtiene todas las salas en las que participa un usuario.
    */
   static async getUserChats(req: Request, res: Response): Promise<void> {
     try {
@@ -15,12 +23,11 @@ export class ChatController {
         res.status(400).json({ message: 'Falta userId' });
         return;
       }
-      // Obtener las rooms de chat_messages donde el sender sea userId o donde la sala se asocie a userId
-      // En una implementación real, deberías tener otra tabla para las salas. Aquí, un approach simplificado:
+
       const rooms = await ChatMessage.findRoomsByUser(userId);
       res.json({ chats: rooms });
     } catch (error: any) {
-      console.error('Error en ChatController.getUserChats:', error);
+      console.error('❌ Error en ChatController.getUserChats:', error);
       res.status(500).json({ error: error.message });
     }
   }
