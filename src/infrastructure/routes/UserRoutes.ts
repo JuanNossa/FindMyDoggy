@@ -11,9 +11,8 @@ const router = Router();
 // GET /api/users
 router.get('/', asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const pool = dbConfig.getPool();
-  // LEFT JOIN wallets para traer wallet_balance
   const [rows] = await pool.query(`
-    SELECT u.id, u.name, u.email, u.password, u.role, w.balance AS wallet_balance
+    SELECT u.id, u.name, u.email, u.password, u.role, u.estado_usuario, w.balance AS wallet_balance
     FROM users u
     LEFT JOIN wallets w ON u.id = w.user_id
   `);
@@ -43,26 +42,24 @@ router.put('/changePassword', asyncHandler(async (req: Request, res: Response): 
   res.json({ message: 'Contraseña actualizada' });
 }));
 
-/**
- * DELETE /api/users/deleteAccount
- * Body: { userId, password }
- */
-router.delete('/deleteAccount', asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const { userId, password } = req.body;
-  const user = await User.findById(Number(userId));
-  if (!user) {
+// ✅ PUT /api/users/toggleStatus/:id - Cambia estado de usuario
+router.put('/toggleStatus/:id', asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const userId = Number(req.params.id);
+  const pool = dbConfig.getPool();
+
+  const [userRows]: any = await pool.query('SELECT estado_usuario FROM users WHERE id = ?', [userId]);
+  if (!userRows.length) {
     res.status(404).json({ message: 'Usuario no encontrado' });
     return;
   }
-  // Verificar la contraseña actual
-  const match = bcrypt.compareSync(password, user.password);
-  if (!match) {
-    res.status(400).json({ message: 'Contraseña incorrecta' });
-    return;
-  }
-  // Eliminar usuario
-  const success = await User.delete(Number(userId));
-  res.json({ message: success ? 'Cuenta eliminada' : 'No se pudo eliminar la cuenta' });
+
+  const newStatus = userRows[0].estado_usuario === 1 ? 2 : 1;
+  await pool.query('UPDATE users SET estado_usuario = ? WHERE id = ?', [newStatus, userId]);
+
+  res.status(200).json({
+    message: `Usuario ${newStatus === 1 ? 'activado' : 'desactivado'} correctamente.`,
+    newStatus // 👉 Se envía el nuevo estado al front
+  });
 }));
 
 export default router;

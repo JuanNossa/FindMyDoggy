@@ -19,11 +19,6 @@ app.use(cors());
 app.use(bodyParser.json());
 // IMPORTANTE: parsear JSON
 app.use(express.json());
-app.use((req, res, next) => {
-  console.log("REQUEST BODY:", req.body);
-  next();
-});
-
 // Agregar middleware para servir archivos estáticos desde la carpeta 'public'
 app.use(express.static('public'));
 
@@ -39,6 +34,7 @@ import uploadRoutes from './infrastructure/routes/uploadRoutes';
 import chatRoutes from './infrastructure/routes/ChatRoutes';
 import userRoutes from './infrastructure/routes/UserRoutes';
 
+
 // Montar rutas
 app.use('/api/test', testRoutes);
 app.use('/api/auth', authRoutes);
@@ -49,6 +45,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/wallets', walletRoutes);
 
 //ruta para testear la base de datos
 import testConnectionRoutes from './infrastructure/routes/testConnectionRoutes';

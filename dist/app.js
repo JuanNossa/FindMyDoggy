@@ -20,10 +20,6 @@ app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
 // IMPORTANTE: parsear JSON
 app.use(express_1.default.json());
-app.use((req, res, next) => {
-    console.log("REQUEST BODY:", req.body);
-    next();
-});
 // Agregar middleware para servir archivos estáticos desde la carpeta 'public'
 app.use(express_1.default.static('public'));
 app.use(express_1.default.urlencoded({ extended: true }));
@@ -46,6 +42,7 @@ app.use('/api/notifications', NotificationRoutes_1.default);
 app.use('/api/uploads', uploadRoutes_1.default);
 app.use('/api/chats', ChatRoutes_1.default);
 app.use('/api/users', UserRoutes_1.default);
+app.use('/api/wallets', WalletRoutes_1.default);
 //ruta para testear la base de datos
 const testConnectionRoutes_1 = __importDefault(require("./infrastructure/routes/testConnectionRoutes"));
 app.use('/api', testConnectionRoutes_1.default);

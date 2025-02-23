@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   requireAuth();
   initMap();
 
-  const btnLogout = document.getElementById('btnLogoutPublications');
+  // Manejo del botón de logout
+  const btnLogout = document.getElementById('btnLogout');
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
       logout();

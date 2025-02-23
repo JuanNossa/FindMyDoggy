@@ -1,13 +1,28 @@
 "use strict";
 // src/infrastructure/routes/WalletRoutes.ts
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const asyncHandler_1 = require("../../application/middlewares/asyncHandler");
 const Wallet_1 = require("../../domain/models/Wallet");
+const dbConfig_1 = __importDefault(require("../../infrastructure/database/dbConfig"));
 const router = (0, express_1.Router)();
 /**
- * GET /api/wallet/:user_id
- * Retorna la wallet de un usuario específico.
+ * ✅ GET /api/wallets - Obtiene todas las wallets con información de usuario.
+ */
+router.get('/', (0, asyncHandler_1.asyncHandler)(async (_req, res) => {
+    const pool = dbConfig_1.default.getPool();
+    const [rows] = await pool.query(`
+    SELECT w.id, w.user_id, u.name, u.email, CAST(w.balance AS DECIMAL(10,2)) AS balance
+FROM wallets w
+JOIN users u ON w.user_id = u.id;
+  `);
+    res.json({ wallets: rows });
+}));
+/**
+ * GET /api/wallet/:user_id - Retorna la wallet de un usuario.
  */
 router.get('/:user_id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const userId = Number(req.params.user_id);
@@ -16,43 +31,34 @@ router.get('/:user_id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
         return;
     }
     const wallet = await Wallet_1.Wallet.findByUserId(userId);
-    if (!wallet) {
-        res.status(404).json({ message: 'Wallet no encontrada para el usuario.' });
-        return;
-    }
-    res.json({ wallet });
+    res.json({ wallet: wallet ?? { balance: 0 } });
 }));
 /**
- * POST /api/wallet/buy
- * Permite a un usuario comprar coins.
+ * POST /api/wallet/buy - Permite a un usuario comprar coins.
  */
 router.post('/buy', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-    console.log('REQUEST BODY en /buy:', req.body); // Verifica que se reciba correctamente
-    const { user_id, amountCOP } = req.body;
-    if (!user_id || isNaN(Number(user_id))) {
-        res.status(400).json({ error: `El ID de usuario no es válido. Recibido: ${user_id}` });
+    const user_id = Number(req.body.user_id);
+    const amountCOP = Number(req.body.amountCOP);
+    if (!user_id || isNaN(user_id)) {
+        res.status(400).json({ error: `El ID de usuario no es válido. Recibido: ${req.body.user_id}` });
         return;
     }
-    if (!amountCOP || isNaN(Number(amountCOP))) {
-        res.status(400).json({ error: `El monto ingresado es inválido. Recibido: ${amountCOP}` });
+    if (!amountCOP || isNaN(amountCOP) || amountCOP < 20000 || amountCOP > 500000) {
+        res.status(400).json({ message: 'El monto debe ser entre $20,000 y $500,000 COP.' });
         return;
     }
-    const coins = Math.floor(Number(amountCOP) / 20000 * 1000);
-    let wallet = await Wallet_1.Wallet.findByUserId(Number(user_id));
-    if (!wallet) {
-        wallet = await Wallet_1.Wallet.create({ user_id: Number(user_id) });
-    }
-    const newBalance = wallet.balance + coins;
-    const success = await Wallet_1.Wallet.updateBalance(Number(user_id), newBalance);
+    const coins = Math.round((amountCOP / 20000) * 1000); // ✅ Redondeo aplicado
+    let wallet = await Wallet_1.Wallet.findByUserId(user_id) ?? await Wallet_1.Wallet.create({ user_id });
+    const newBalance = Math.round(wallet.balance + coins); // ✅ Redondeo al calcular
+    const success = await Wallet_1.Wallet.updateBalance(user_id, newBalance);
     if (!success) {
-        res.status(500).json({ message: 'No se pudo actualizar el saldo de la wallet' });
+        res.status(500).json({ message: 'Error al actualizar el saldo.' });
         return;
     }
     res.json({ message: 'Compra exitosa', coinsComprados: coins, nuevoSaldo: newBalance });
 }));
 /**
- * POST /api/wallet/transfer
- * Permite transferir coins entre usuarios.
+ * POST /api/wallet/transfer - Permite transferir coins entre usuarios.
  */
 router.post('/transfer', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
     const from_user_id = Number(req.body.from_user_id);
@@ -62,24 +68,60 @@ router.post('/transfer', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
         res.status(400).json({ error: 'Datos inválidos para la transferencia.' });
         return;
     }
-    const senderWallet = await Wallet_1.Wallet.findByUserId(from_user_id);
-    const receiverWallet = await Wallet_1.Wallet.findByUserId(to_user_id);
-    if (!senderWallet || !receiverWallet) {
-        res.status(404).json({ message: 'Wallet del emisor o receptor no encontrada.' });
+    if (amount < 1000) {
+        res.status(400).json({ message: 'La transferencia mínima es de 1,000 coins.' });
         return;
+    }
+    const senderWallet = await Wallet_1.Wallet.findByUserId(from_user_id);
+    if (!senderWallet) {
+        res.status(404).json({ message: 'Wallet del emisor no encontrada.' });
+        return;
+    }
+    // Crear wallet para el receptor si no existe
+    let receiverWallet = await Wallet_1.Wallet.findByUserId(to_user_id);
+    if (!receiverWallet) {
+        receiverWallet = await Wallet_1.Wallet.create({ user_id: to_user_id, balance: 0 });
     }
     if (senderWallet.balance < amount) {
-        res.status(400).json({ message: 'Saldo insuficiente para la transferencia.' });
+        res.status(400).json({ message: 'Saldo insuficiente.' });
         return;
     }
-    const newSenderBalance = senderWallet.balance - amount;
-    const newReceiverBalance = receiverWallet.balance + amount;
-    await Wallet_1.Wallet.updateBalance(from_user_id, newSenderBalance);
-    await Wallet_1.Wallet.updateBalance(to_user_id, newReceiverBalance);
+    const newSenderBalance = Math.round(senderWallet.balance - amount); // ✅ Redondeo aplicado
+    const newReceiverBalance = Math.round(receiverWallet.balance + amount); // ✅ Redondeo aplicado
+    const updatedSender = await Wallet_1.Wallet.updateBalance(from_user_id, newSenderBalance);
+    const updatedReceiver = await Wallet_1.Wallet.updateBalance(to_user_id, newReceiverBalance);
+    if (!updatedSender || !updatedReceiver) {
+        res.status(500).json({ message: 'Error al realizar la transferencia.' });
+        return;
+    }
     res.json({
         message: 'Transferencia exitosa',
         saldoEmisor: newSenderBalance,
         saldoReceptor: newReceiverBalance
     });
+}));
+/**
+ * ✅ PUT /api/wallets/:id - Permite al administrador actualizar el saldo de una wallet.
+ */
+router.put('/:user_id', (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    const user_id = Number(req.params.user_id);
+    const { balance } = req.body;
+    if (!user_id || isNaN(user_id)) {
+        res.status(400).json({ message: 'ID de usuario inválido.' });
+        return; // ✅ Detiene la ejecución después de enviar la respuesta
+    }
+    const wallet = await Wallet_1.Wallet.findByUserId(user_id);
+    if (!wallet) {
+        console.warn(`No se encontró wallet para user_id: ${user_id}`);
+        res.status(404).json({ message: 'Wallet no encontrada.' });
+        return; // ✅ Retorno agregado para evitar devolver Response en Promise<void>
+    }
+    const updated = await Wallet_1.Wallet.updateBalance(user_id, balance);
+    if (!updated) {
+        console.error(`Fallo al actualizar el balance para user_id: ${user_id}`);
+        res.status(500).json({ message: 'Error al actualizar el saldo.' });
+        return; // ✅ Asegura que la función finalice aquí
+    }
+    res.status(200).json({ message: 'Saldo actualizado correctamente.', nuevoSaldo: balance });
 }));
 exports.default = router;

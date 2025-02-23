@@ -51,12 +51,13 @@ CREATE DATABASE IF NOT EXISTS findmydoggy_db;
 USE findmydoggy_db;
 
 -- Tabla de usuarios
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'user'
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'user',
+  estado_usuario TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = Activo, 2 = Inactivo'
 ) ENGINE=InnoDB;
 
 -- Tabla de ubicaciones
